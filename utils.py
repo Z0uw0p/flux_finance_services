@@ -1,6 +1,25 @@
 import logging
-import sqlalchemy
+from sqlalchemy import create_engine
 import os
+import yfinance as yf
+import pandas as pd
+
+# Fetch stock data
+def fetch_stock_data(ticker, period):
+
+    try:
+        data = yf.download(ticker, period)
+        
+        if data.empty:
+            
+            return None
+        
+        return data
+    
+    except Exception as e:
+        logging.error(f"Error fetching data for {ticker}: {str(e)}")
+
+        return None
 
 # Calculate the EMA
 def calculate_ema(data, window):
@@ -142,8 +161,6 @@ async def fetch_and_store_market_data(ticker, period):
             data['smma_9'] = calc_smma(data['Close'], 9)
             data['smma_20'] = calc_smma(data['Close'], 20)
 
-            await store_data_in_db(ticker, data)
-
             logging.info(f'Successfully fetched and stored data for {ticker} with period {p}')
 
             return
@@ -152,3 +169,44 @@ async def fetch_and_store_market_data(ticker, period):
             logging.error(f'Error fetching and storing data for {ticker} with period {p}: {str(e)}')
     
     logging.error(f'Failed to fetch any data for {ticker} across all periods.')
+
+# Connect to Google Cloud SQL
+def connect_to_cloud_sql(user, password, host, database):
+    
+    try:
+        engine = create_engine(f'mysql+pymysql://{user}:{password}@{host}/{database}')
+
+        return engine
+    
+    except Exception as e:
+        logging.error(F"Error connecting to the database: {str(e)}")
+
+        return None
+    
+def save_to_sql(data, ticker, engine):
+    try:
+        data.to_sql(ticker, engine, if_exists='replace', index=True)
+        logging.info(f"Data for {ticker} saved successfully!")
+
+    except Exception as e:
+        logging.error(f"Error saving data for {ticker}: {str(e)}")
+
+def fetch_and_store_stocks(stock_list, user, password, host, database):
+    engine = connect_to_cloud_sql(user, password, host, database)
+
+    if engine is None:
+        
+        return
+    
+    periods = ["10y", "5y", "2y", "1y", "6mo", "3mo", "1mo"]
+
+    for ticker in stock_list:
+
+        for period in periods:
+
+            data = fetch_stock_data(ticker, period)
+
+            if data is not None:
+                save_to_sql(data, ticker, engine)
+
+                break
