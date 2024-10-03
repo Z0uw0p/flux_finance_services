@@ -87,9 +87,8 @@ def calc_zlema(series, length):
     
     return ema1 + d
 
+"""
 def setup_market_data_database():
-    conn = sqlite3.connect('market_data.db')
-    cursor = conn.cursor()
 
     cursor.execute('''
         CREATE TABLE IF NOT EXISTS stock_data (
@@ -122,7 +121,8 @@ def setup_market_data_database():
 
     conn.commit()
     conn.close()
-
+"""
+    
 async def fetch_and_store_market_data(ticker, period):
     logging.info(f'Starting to fetch and store data for {ticker}')
 
@@ -170,6 +170,7 @@ async def fetch_and_store_market_data(ticker, period):
     
     logging.error(f'Failed to fetch any data for {ticker} across all periods.')
 
+    
 # Connect to Google Cloud SQL
 def connect_to_cloud_sql(user, password, host, database):
     
