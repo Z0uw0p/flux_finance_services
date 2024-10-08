@@ -1,3 +1,5 @@
-import yfinance as yf
+import os
 
-data = yf.download('AAPL', period='mo', interval='4d')
+name = os.getenv("MARKET_DATABASE_NAME")
+
+print(name)
