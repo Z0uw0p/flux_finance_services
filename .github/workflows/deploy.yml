@@ -1,0 +1,33 @@
+name: Deploy
+
+on: [push]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: '3.8'
+
+    - name: Install dependencies
+      run: |
+        python -m venv vmvenv
+        source vmvenv/bin/activate
+        pip install -r requirements.txt
+
+    - name: Run script
+      env:
+        MARKET_DATABASE_USER: ${{ secrets.MARKET_DATABASE_USER }}
+        MARKET_DATABASE_PASSWORD: ${{ secrets.MARKET_DATABASE_PASSWORD }}
+        MARKET_DATABASE_NAME: ${{ secrets.MARKET_DATABASE_NAME }}
+        MARKET_DATABASE_PUBLIC_IP: ${{ secrets.MARKET_DATABASE_PUBLIC_IP }}
+        ZARA_NEXUS_VM_IP: ${{ secrets.ZARA_NEXUS_VM_IP }}
+      run: |
+        source vmvenv/bin/activate
+        python market_database.py
