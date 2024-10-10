@@ -1,31 +1,59 @@
 import yfinance as yf
 import pandas as pd
-from sqlalchemy import create_engine
+import os
+import logging
+from google.cloud.sql.connector import Connector
+import sqlalchemy
+import pymysql
 
+# Set up logging
+def setup_logging(level):
+
+    if level == "info":
+        logging.basicConfig(level=logging.INFO)
+
+    else:
+        logging.basicConfig(level=logging.DEBUG)
+
+# Fetch historical data from Yahoo Finance
 def fetch_historical_data(ticker, period, interval):
     data = yf.download(ticker, period=period, interval=interval)
+    logging.info(f"Data fetched for {ticker}, for a {period} period, with a {interval} interval")
 
     return data
 
+# Fetch daily data from Yahoo Finance
 def fetch_daily_data(ticker):
     data = yf.download(ticker, period='1d')
+    logging.info(f"Data fetched for {ticker} for the last day")
 
     return data
 
-def append_historical_data_to_market_db(data, ticker):
-    data.to_sql('historical_data', engine, if_exists='append', index=False)
+# Get environment variables
+def get_env_var(var):
+    variable = os.getenv(var)
 
-def append_daily_data_to_market_db(data, ticker):
-    data.to_sql('daily_data', engine, if_exists='append', index=False)
+    if variable is None:
 
-def initialize_database(tickers):
+        raise ValueError(f"Environment variable {var} is not set")
     
-    for ticker in tickers:
-        data = fetch_historical_data(ticker, 'max', '1d')
-        append_historical_data_to_market_db(data, ticker)
+    else:
+        logging.info(f"Environment variable {var} is set")
 
-def daily_update(tickers):
+    return variable
 
-    for ticker in tickers:
-        data = fetch_daily_data(ticker)
-        append_daily_data_to_market_db(data, ticker)
+# Get the database connection
+def get_conn(conn_name, username, password, db_name) -> pymysql.connections.Connection:
+    connector = Connector()
+    
+    conn: pymysql.connections.Connection = connector.connect(
+        conn_name,
+        "pymysql",
+        user=username,
+        password=password,
+        db=db_name,
+    )
+
+    logging.info(f"Connected to {db_name} database")
+
+    return conn
