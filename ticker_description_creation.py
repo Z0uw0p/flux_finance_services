@@ -5,7 +5,9 @@ import pandas as pd
 sec_ticker_list = pd.read_csv(r"ticker_lists\sec_tickers.csv")
 tse_ticker_list = pd.read_csv(r"ticker_lists\sec_tickers.csv")
 
-ticker_list = sec_ticker_list['Ticker'].tolist() + tse_ticker_list['Ticker'].tolist()
+#sec_and_tse_ticker_list = sec_ticker_list['Ticker'].tolist() + tse_ticker_list['Ticker'].tolist()
+portfolio_ticker_list = ["SIA.TO"]
+ticker_list = portfolio_ticker_list
 total_tickers = len(ticker_list)
 not_found_list = []
 
